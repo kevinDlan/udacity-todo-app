@@ -6,7 +6,7 @@ service: serverless-todo-app
 plugins:
   - serverless-webpack
   - serverless-iam-roles-per-function
-  - serverless-reqvalidator-plugin
+  # - serverless-reqvalidator-plugin
   - serverless-plugin-tracing
 
 provider:
@@ -62,20 +62,20 @@ provider:
         - s3:PutObject
         - s3:GetObject
       Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
-custom:
-  documentation:
-    api:
-      info:
-        version: v1.0.0
-        title: Todoapp API
-        description: Serverless application for creating todos
-    models:
-      - name: CreateRequest
-        contentType: application/json
-        schema: ${file(models/create-todo-model.json)}
-      - name: UpdateRequest
-        contentType: application/json
-        schema: ${file(models/update-todo-model.json)}
+# custom:
+#   documentation:
+#     api:
+#       info:
+#         version: v1.0.0
+#         title: Todoapp API
+#         description: Serverless application for creating todos
+#     models:
+#       - name: CreateRequest
+#         contentType: application/json
+#         schema: ${file(models/create-todo-model.json)}
+#       - name: UpdateRequest
+#         contentType: application/json
+#         schema: ${file(models/update-todo-model.json)}
 
 
 functions:
@@ -106,12 +106,10 @@ functions:
           method: post
           path: todos
           cors: true
-          reqValidatorName: RequestBodyValidator
-          documentation:
-            summary: Create a new todo
-            description: Create a new todo
-            requestModels:
-              'application/json': CreateRequest
+          authorizer: Auth
+          request:
+            schemas:
+              application/json: ${file(models/create-todo-model.json)}
     
     iamRoleStatements:
       - Effect: Allow
@@ -238,12 +236,12 @@ resources:
               Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
         Bucket: !Ref AttachmentsBucket
     
-    RequestBodyValidator:
-      Type: AWS::ApiGateway::RequestValidator
-      Properties:
-        Name: 'request-body-validator'
-        RestApiId:
-          Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
-        ValidateRequestParameters: false
+    # RequestBodyValidator:
+    #   Type: AWS::ApiGateway::RequestValidator
+    #   Properties:
+    #     Name: 'request-body-validator'
+    #     RestApiId:
+    #       Ref: ApiGatewayRestApi
+    #     ValidateRequestBody: true
+    #     ValidateRequestParameters: false
         
